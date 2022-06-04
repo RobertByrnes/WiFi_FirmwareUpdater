@@ -4,7 +4,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Update.h>
-#include <version.h>
 #include "string.h"
 
 class WiFi_FirmwareUpdater: public HTTPClient
@@ -12,8 +11,9 @@ class WiFi_FirmwareUpdater: public HTTPClient
 public:
     const char* ssid; // Local network name.
     const char* password; // Local network password.
+    const std::string &currentVersion; // Current firmware version.
 
-    WiFi_FirmwareUpdater(const char* ssid, const char* password);
+    WiFi_FirmwareUpdater(const char* ssid, const char* password, const std::string &currentVersion);
     ~WiFi_FirmwareUpdater();
 
     bool checkUpdateAvailable(const char *versionFileUrl);

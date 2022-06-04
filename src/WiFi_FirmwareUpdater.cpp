@@ -1,11 +1,12 @@
 #include "WiFi_FirmwareUpdater.h"
 
 // Constructor
-WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password):
+WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const std::string &currentVersion):
    ssid(ssid), 
    password(password), 
    totalLength(0), 
-   currentLength(0) {}
+   currentLength(0),
+   currentVersion(currentVersion) {}
 
 // Destructor
 WiFi_FirmwareUpdater::~WiFi_FirmwareUpdater() {}
@@ -105,7 +106,7 @@ int WiFi_FirmwareUpdater::getVersionNumberFromString(bool currentVersionCheck)
     version = version.substr(version.find_first_of("=") + 1);
     // Serial.print("[D] std::string version number: "); Serial.println(version.c_str());
   } else {
-    version = CURRENT_VERSION;
+    version = this->currentVersion;
   }
 
   std::string output;
