@@ -117,7 +117,7 @@ int WiFi_FirmwareUpdater::getVersionNumberFromString(bool currentVersionCheck)
     }
   }
   // Serial.print("[D] std::string output: "); Serial.println(output.c_str());
-  return std::stoi( output );
+  return std::atoi( output.c_str() );
 }
 
 /**
