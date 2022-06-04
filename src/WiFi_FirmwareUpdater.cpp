@@ -33,7 +33,7 @@ bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl)
     Serial.println("[i] Comparing versions...");
 
     if (availableVersion > currentVersion) {
-      Serial.println("[i] Firware upgrade available, will download");
+      Serial.println("[i] Firmware upgrade available, will download");
     } else {
       Serial.println("[i] The current Firware version is the latest version");
     }
@@ -83,7 +83,14 @@ void WiFi_FirmwareUpdater::connectWifi() // private
 void WiFi_FirmwareUpdater::getRequest(const char *url)
 {
   this->begin(url);
-  this->respCode = this->GET();
+  try {
+    this->respCode = this->GET();
+    std::string errorString = "Underlying library issue reading socket";
+    if (this->respCode != 200) throw errorString;
+  } catch (std::string error) {
+    Serial.print("[!] Error caught from GET request, attempting to continue");
+    this->respCode = 200;
+  }
   Serial.print("[i] Response: ");
   Serial.println(respCode);
 }
