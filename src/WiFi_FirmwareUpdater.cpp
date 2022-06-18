@@ -1,4 +1,7 @@
 #include "WiFi_FirmwareUpdater.h"
+#include "hexdump.cpp"
+
+#define HEXDUMP
 
 // Constructor
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const std::string &currentVersion):
@@ -63,16 +66,16 @@ bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl)
  */
 void WiFi_FirmwareUpdater::connectWifi() // private
 {
-    WiFi.mode(WIFI_MODE_STA);        
-    WiFi.begin(this->ssid, this->password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("");
-    Serial.println("[+] WiFi connected");
-    Serial.print("[i] Local IP: ");
-    Serial.println(WiFi.localIP());
+  WiFi.mode(WIFI_MODE_STA);        
+  WiFi.begin(this->ssid, this->password);
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("[+] WiFi connected");
+  Serial.print("[i] Local IP: ");
+  Serial.println(WiFi.localIP());
 }
 
 /**
@@ -173,10 +176,21 @@ void WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl)
       WiFiClient * stream = this->getStreamPtr(); // get tcp stream
       Serial.println("[i] Updating firmware...");
       
+    #ifdef HEXDUMP
+      int loopCount = 0;
+    #endif
+
       while(this->connected() && (len > 0 || len == -1)) { // read all data from server
         size_t size = stream->available(); // get available data size
         if (size) {
           int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size)); // read up to 128 byte
+
+        #ifdef HEXDUMP
+          if (loopCount == 0) {
+            hexDump(Serial, "[DUMP]", &c, 128, 16);
+          }
+          loopCount = 1;
+        #endif
           processUpdate(buff, c);
 
           if (len > 0) {
