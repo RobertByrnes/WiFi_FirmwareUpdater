@@ -18,11 +18,13 @@ public:
 
     bool checkUpdateAvailable(const char *versionFileUrl);
     void updateFirmware(const char *updateUrl);
+    const char* getAvailableFirmwareVersion();
 
 private:
     int totalLength; // Total size of firmware.
     int currentLength; // Current size of the written firmware.
     int respCode; // HTTP response from GET requests
+    const char* availableVersion; // Firmware version available on the remote server
 
     void connectWifi();
     void getRequest(const char *url);

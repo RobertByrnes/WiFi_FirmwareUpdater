@@ -32,7 +32,4 @@ const char *UPDATE_VERSION_FILE_URL = "https://draperbiotech.clystnet.com/firmwa
 const char *SSID = "CrowdedHouse"; // WiFi Network Name
 const char *PASSWORD = "kF4QMhzc3xcS"; // WiFi Network Password
 
-// Counter
-unsigned long PREVIOUS_MILLIS = 0;
-
 #endif

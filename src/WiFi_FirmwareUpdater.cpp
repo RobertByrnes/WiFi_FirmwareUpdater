@@ -28,19 +28,14 @@ bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl)
 
   if (this->respCode == 200) {
     int len = totalLength = this->getSize(); // get length of doc (is -1 when Server sends no Content-Length header)
-    Serial.println("[i] Checking firmware versions...");
     int currentVersion = this->getVersionNumberFromString(true);
     int availableVersion = this->getVersionNumberFromString(false);
-    Serial.printf("[i] Current firmware version: %u\n", currentVersion);
-    Serial.printf("[i] Firmware version available: %u\n", availableVersion);
-    Serial.println("[i] Comparing versions...");
 
     if (availableVersion > currentVersion) {
-      Serial.println("[i] Firmware upgrade available, will download");
+      return true;
     } else {
-      Serial.println("[i] The current Firware version is the latest version");
+      return false;
     }
-  
   } else {
     Serial.print("[!] Memory: ");
     Serial.println(ESP.getMaxAllocHeap());
@@ -78,6 +73,11 @@ void WiFi_FirmwareUpdater::connectWifi() // private
   Serial.println(WiFi.localIP());
 }
 
+const char * WiFi_FirmwareUpdater::getAvailableFirmwareVersion() // public
+{
+  return this->availableVersion;
+}
+
 /**
  * @brief Connect to update server with a GET request.
  * 
@@ -112,21 +112,20 @@ int WiFi_FirmwareUpdater::getVersionNumberFromString(bool currentVersionCheck)
 
   if (currentVersionCheck == false) {
     version = this->getString().c_str();
-    // Serial.print("[D] std::string version: "); Serial.println(version.c_str());
     version = version.substr(version.find_first_of("=") + 1);
-    // Serial.print("[D] std::string version number: "); Serial.println(version.c_str());
+    this->availableVersion = version.c_str();
   } else {
     version = this->currentVersion;
   }
 
   std::string output;
   output.reserve(version.size()); // optional, avoids buffer reallocations in the loop
+
   for (size_t i = 0; i < version.size(); ++i) {
     if (version[i] != '.') {
       output += version[i];
     }
   }
-  // Serial.print("[D] std::string output: "); Serial.println(output.c_str());
   return std::atoi( output.c_str() );
 }
 
@@ -145,7 +144,7 @@ void WiFi_FirmwareUpdater::processUpdate(uint8_t *data, size_t len) // private
   Update.write(data, len);
   this->currentLength += len;
   // Print dots while waiting for update to finish
-  Serial.print('.');
+  // Serial.print('.');
   // if current length of written firmware is not equal to total firmware size, repeat
   if (this->currentLength != totalLength) return;
   Update.end(true);
@@ -171,7 +170,7 @@ void WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl)
   if (this->respCode == 200) {
       int len = totalLength = this->getSize(); // get length of doc (is -1 when Server sends no Content-Length header)
       Update.begin(UPDATE_SIZE_UNKNOWN);
-      Serial.printf("[i] Firmware Size: %u\n",totalLength);
+      Serial.printf("[i] Firmware Size: %u\n", totalLength);
       uint8_t buff[128] = { 0 }; // create buffer for read
       WiFiClient * stream = this->getStreamPtr(); // get tcp stream
       Serial.println("[i] Updating firmware...");
@@ -182,12 +181,18 @@ void WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl)
 
       while(this->connected() && (len > 0 || len == -1)) { // read all data from server
         size_t size = stream->available(); // get available data size
+
+        if (loopCount == 0) {
+          Serial.printf("[Size] %u\n", size);
+        }
+        
         if (size) {
           int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size)); // read up to 128 byte
 
         #ifdef HEXDUMP
           if (loopCount == 0) {
-            hexDump(Serial, "[DUMP]", &c, 128, 16);
+            hexDump(Serial, "[DUMP buffer]", &buff, 128, 16);
+            hexDump(Serial, "[DUMP c]", &c, 128, 16);
           }
           loopCount = 1;
         #endif
