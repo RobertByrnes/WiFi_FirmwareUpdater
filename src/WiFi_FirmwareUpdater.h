@@ -5,31 +5,54 @@
 #include <HTTPClient.h>
 #include <Update.h>
 #include "string.h"
+#include <HardwareSerial.h>
+
+using namespace std;
+
+#define HEXDUMP                             (1)
+
+#define FIRMWARE_ERROR_OK                   (0)
+#define FIRMWARE_ERROR_WIFI                 (1)
+#define FIRMWARE_ERROR_RESPONSE             (2)
+#define FIRMWARE_ERROR_UPDATE_BEGIN         (3)
+#define FIRMWARE_ERROR_CONSTRUCTOR          (4)
+#define FIRMWARE_ERROR_NO_CURRENT_VERSION   (5)
+#define FIRMWARE_ERROR_NO_UPDATE_VERSION    (6)
+#define FIRMWARE_ERROR_UPDATE_END           (7)
+
 
 class WiFi_FirmwareUpdater: public HTTPClient
 {
 public:
-    const char* ssid; // Local network name.
-    const char* password; // Local network password.
-    const std::string &currentVersion; // Current firmware version.
+    const char *ssid; // Local network name
+    const char *password; // Local network password
+    const char *httpErrorString;
+    const string currentVersion; // Current firmware version
+    uint8_t errorNumber = 0; // Error number
+    HardwareSerial serial = 0;
 
-    WiFi_FirmwareUpdater(const char* ssid, const char* password, const std::string &currentVersion);
+    WiFi_FirmwareUpdater(const char *ssid, const char *password, const char *currentVersion);
+    WiFi_FirmwareUpdater(const char *ssid, const char *password, const char *currentVersion, HardwareSerial Serial);
     ~WiFi_FirmwareUpdater();
 
     bool checkUpdateAvailable(const char *versionFileUrl);
-    void updateFirmware(const char *updateUrl);
-    const char* getAvailableFirmwareVersion();
+    bool connectWifi();
+    const char * availableFirmwareVersion();
+    const char * errorString();
+    int error();
+    int updateFirmware(const char *updateUrl, uint8_t hexDump=0);
+    IPAddress ipAddress();
 
 private:
-    int totalLength; // Total size of firmware.
-    int currentLength; // Current size of the written firmware.
+    int totalLength; // Total size of firmware
+    int currentLength; // Current size of the written firmware
     int respCode; // HTTP response from GET requests
     const char* availableVersion; // Firmware version available on the remote server
 
-    void connectWifi();
-    void getRequest(const char *url);
-    int getVersionNumberFromString(bool currentVersionCheck);
+    bool getRequest(const char *url);
+    void hexDump(HardwareSerial &Serial, const char * desc, const void * addr, const int len, int perLine);
     void processUpdate(uint8_t *data, size_t len);
+    int versionNumberFromString(bool currentVersionCheck);
 };
 
 #endif

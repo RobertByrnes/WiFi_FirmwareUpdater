@@ -5,7 +5,7 @@
 using namespace std;
 
 // Version
-const string CURRENT_VERSION = "0.0.1"; 
+const char *CURRENT_VERSION = "0.0.1"; 
 
 #define BAUD_RATE 115200
 

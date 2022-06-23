@@ -1,35 +1,57 @@
 #include "WiFi_FirmwareUpdater.h"
 #include "hexdump.cpp"
 
-#define HEXDUMP
-
-// Constructor
-WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const std::string &currentVersion):
+// Constructors
+WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion):
    ssid(ssid), 
    password(password), 
    totalLength(0), 
    currentLength(0),
    currentVersion(currentVersion) {}
 
+
+WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion, HardwareSerial Serial):
+   ssid(ssid), 
+   password(password), 
+   totalLength(0), 
+   currentLength(0),
+   currentVersion(currentVersion)
+{
+  this->serial = Serial;
+}
+
 // Destructor
 WiFi_FirmwareUpdater::~WiFi_FirmwareUpdater() {}
 
 /**
- * @brief Connects to the update server and gets the version file,
- * if the version is greater that the current version will
- * return true else false.
+ * @brief Get the firmware version available on the update server.
+ * 
+ * @return const char *
+ */
+const char * WiFi_FirmwareUpdater::availableFirmwareVersion() // public
+{
+  return this->availableVersion;
+}
+
+/**
+ * @brief Connect to the update server and get the version file,
+ * if the version is greater than the current version this 
+ * function will return true, else it will be false.
+ * 
+ * @param versionFileUrl const char *
  * 
  * @return bool
  */
-bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl)
+bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl) // public
 {
-  this->connectWifi();
-  this->getRequest(verisonFileUrl);
+  if (!this->connectWifi() || !this->getRequest(verisonFileUrl)) {
+    return false;
+  }
 
-  if (this->respCode == 200) {
-    int len = totalLength = this->getSize(); // get length of doc (is -1 when Server sends no Content-Length header)
-    int currentVersion = this->getVersionNumberFromString(true);
-    int availableVersion = this->getVersionNumberFromString(false);
+  if (respCode == 200) {
+    int len = this->totalLength = this->getSize(); // get length of doc (is -1 when Server sends no Content-Length header)
+    int currentVersion = this->versionNumberFromString(true);
+    int availableVersion = this->versionNumberFromString(false);
 
     if (availableVersion > currentVersion) {
       return true;
@@ -37,96 +59,169 @@ bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl)
       return false;
     }
   } else {
-    Serial.print("[!] Memory: ");
-    Serial.println(ESP.getMaxAllocHeap());
-    Serial.println("[-] Cannot download firmware version file. Only HTTP response 200 is supported.");  
+    this->errorNumber = 2;
+
     this->end(); 
+    
     while (!WiFi.disconnect()) {
       sleep(1);
     };
+
     return false;
   }
-  
-  this->end(); 
-  while (!WiFi.disconnect()) {
-    sleep(1);
-  };
+
   return true;
 }
 
 /**
- * @brief Start WiFi connection.
+ * @brief Start WiFi connection, allows 20 seconds to make a connection, before
+ * setting a failed to connect errorNumber.
  * 
- * @return void
+ * @return bool
  */
-void WiFi_FirmwareUpdater::connectWifi() // private
+bool WiFi_FirmwareUpdater::connectWifi() // private
 {
-  WiFi.mode(WIFI_MODE_STA);        
-  WiFi.begin(this->ssid, this->password);
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
+  if (WiFi.mode(WIFI_MODE_STA)) {
+    this->errorNumber = 0;
+  } 
+
+  int status = WiFi.begin(ssid, password);
+
+  while (status != WL_CONNECTED) {
+    status = WiFi.status();
+    delay(500);
   }
-  Serial.println("");
-  Serial.println("[+] WiFi connected");
-  Serial.print("[i] Local IP: ");
-  Serial.println(WiFi.localIP());
+
+  if (!WiFi.isConnected()) {
+    this->errorNumber = 1;
+    return false;
+  }
+
+  return true;
 }
 
-const char * WiFi_FirmwareUpdater::getAvailableFirmwareVersion() // public
+/**
+ * @brief Get the most recent error number from the class.
+ * 
+ * @return int
+ */
+int WiFi_FirmwareUpdater::error()
 {
-  return this->availableVersion;
+  return this->errorNumber;
+}
+
+/**
+ * @brief get the errorNumber message from the errorNumber number.
+ * 
+ * @param errorNumber uint8_t
+ * 
+ * @return const char *
+ */
+const char * WiFi_FirmwareUpdater::errorString() // public
+{
+  if (this->errorNumber == FIRMWARE_ERROR_OK) {
+    return ("No error");
+  } else if (this->errorNumber == FIRMWARE_ERROR_WIFI) {
+    return ("Failed to connect to WiFi");
+  } else if (this->errorNumber == FIRMWARE_ERROR_RESPONSE) {
+    return ("Only HTTP response 200 is supported");
+  } else if (this->errorNumber == FIRMWARE_ERROR_UPDATE_BEGIN) {
+    return ("Update class couldn't begin update, not enough space for update");
+  } else if (this->errorNumber == FIRMWARE_ERROR_NO_CURRENT_VERSION) {
+    return ("Failed to read the current firmware version");
+  } else if (this->errorNumber == FIRMWARE_ERROR_NO_UPDATE_VERSION) {
+    return ("Failed to read the updates firmware version");
+  } else if (this->errorNumber == FIRMWARE_ERROR_CONSTRUCTOR) {
+    return ("Incorrect constructor, a HardwareSerial object must be passed in to use hexDump()");
+  }
+  return ("Unknown error");
 }
 
 /**
  * @brief Connect to update server with a GET request.
  * 
- * @return void
+ * @return bool
  */
-void WiFi_FirmwareUpdater::getRequest(const char *url)
+bool WiFi_FirmwareUpdater::getRequest(const char *url) // private
 {
   this->begin(url);
-  try {
-    this->respCode = this->GET();
-    std::string errorString = "Underlying library issue reading socket";
-    if (this->respCode != 200) throw errorString;
-  } catch (std::string error) {
-    Serial.print("[!] Error caught from GET request, attempting to continue");
-    this->respCode = 200;
+  respCode = this->GET();
+
+  if (respCode != 200) {
+    errorNumber = 2;
+    return false;
   }
-  Serial.print("[i] Response: ");
-  Serial.println(respCode);
+
+  return true;
+}
+
+// Usage:
+//     hexDump(desc, addr, len, perLine);
+//         desc:    if non-NULL, printed as a description before hex dump.
+//         addr:    the address to start dumping from.
+//         len:     the number of bytes to dump.
+//         perLine: number of bytes on each output line.
+
+void WiFi_FirmwareUpdater::hexDump(HardwareSerial &Serial, const char * desc, const void * addr, const int len, int perLine)
+{
+    int i;
+    unsigned char buff[perLine+1];
+    const unsigned char * pc = (const unsigned char *)addr;
+
+    if (desc != "") {
+      Serial.printf("%s:\n", desc);
+    }
+    
+    if (len == 0) {
+        Serial.print("  ZERO LENGTH\n");
+        return;
+    }
+
+    if (len < 0) {
+        Serial.printf("  NEGATIVE LENGTH: %d\n", len);
+        return;
+    }
+
+    // Process every byte in the data.
+    for (i = 0; i < len; i++) {
+        if ((i % perLine) == 0) {
+            // Only print previous-line ASCII buffer for lines beyond first.
+            if (i != 0) {
+              Serial.printf("  %s\n", buff);
+            }
+            // Output the offset of current line.
+            Serial.printf("  %04x ", i);
+        }
+
+        // Now the hex code for the specific character.
+        Serial.printf(" %02x", pc[i]);
+
+        // And buffer a printable ASCII character for later.
+        if ((pc[i] < 0x20) || (pc[i] > 0x7e)) // isprint() may be better.
+            buff[i % perLine] = '.';
+        else
+            buff[i % perLine] = pc[i];
+        buff[(i % perLine) + 1] = '\0';
+    }
+
+    // Pad out last line if not exactly perLine characters.
+    while ((i % perLine) != 0) {
+        Serial.printf("   ");
+        i++;
+    }
+
+    // And print the final ASCII buffer.
+    Serial.printf("  %s\n", buff);
 }
 
 /**
- * @brief Parses the verion number (sematic versioning) from a string read
- * from the GET request, or from the CURRENT_VERSION decalred in 
- * version.h. The version is returned as integer for comparison,
- * e.g. "version=1.2.8" will be returned as 128.
+ * @brief use the WiFi class to return the local IP Address
  * 
- * @return int
+ * @return IPAddress
  */
-int WiFi_FirmwareUpdater::getVersionNumberFromString(bool currentVersionCheck) 
+IPAddress WiFi_FirmwareUpdater::ipAddress() // public
 {
-  std::string version;
-
-  if (currentVersionCheck == false) {
-    version = this->getString().c_str();
-    version = version.substr(version.find_first_of("=") + 1);
-    this->availableVersion = version.c_str();
-  } else {
-    version = this->currentVersion;
-  }
-
-  std::string output;
-  output.reserve(version.size()); // optional, avoids buffer reallocations in the loop
-
-  for (size_t i = 0; i < version.size(); ++i) {
-    if (version[i] != '.') {
-      output += version[i];
-    }
-  }
-  return std::atoi( output.c_str() );
+  return WiFi.localIP();
 }
 
 /**
@@ -142,15 +237,16 @@ int WiFi_FirmwareUpdater::getVersionNumberFromString(bool currentVersionCheck)
 void WiFi_FirmwareUpdater::processUpdate(uint8_t *data, size_t len) // private
 {
   Update.write(data, len);
-  this->currentLength += len;
-  // Print dots while waiting for update to finish
-  // Serial.print('.');
+  currentLength += len;
   // if current length of written firmware is not equal to total firmware size, repeat
-  if (this->currentLength != totalLength) return;
-  Update.end(true);
-  Serial.printf("\n[+] Update Success, Total Size: %u\nRebooting...\n", this->currentLength); 
+  if (currentLength != totalLength) return;
+
+  if (!Update.end(true)) {
+    throw 7;
+  }
+
+  this->end();
   WiFi.disconnect();
-  // Restart ESP32 to see changes
   ESP.restart();
 }
 
@@ -160,52 +256,110 @@ void WiFi_FirmwareUpdater::processUpdate(uint8_t *data, size_t len) // private
  * 128 byte chunks. Each chunk is then passed to the
  * processUpdate function to be written to flash.
  * 
+ * If this function fails the errorNumber is returned, call
+ * WiFi_FirmwareUpdater::errorString to retrieve the errorNumber message.
+ * 
+ * @param updateUrl const char * 
+ * 
  * @return void
  */
-void WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl)
+int WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl, uint8_t hexDump)
 {
-  this->connectWifi();
-  this->getRequest(updateUrl);
-
-  if (this->respCode == 200) {
-      int len = totalLength = this->getSize(); // get length of doc (is -1 when Server sends no Content-Length header)
-      Update.begin(UPDATE_SIZE_UNKNOWN);
-      Serial.printf("[i] Firmware Size: %u\n", totalLength);
-      uint8_t buff[128] = { 0 }; // create buffer for read
-      WiFiClient * stream = this->getStreamPtr(); // get tcp stream
-      Serial.println("[i] Updating firmware...");
-      
-    #ifdef HEXDUMP
-      int loopCount = 0;
-    #endif
-
-      while(this->connected() && (len > 0 || len == -1)) { // read all data from server
-        size_t size = stream->available(); // get available data size
-
-        if (loopCount == 0) {
-          Serial.printf("[Size] %u\n", size);
-        }
-        
-        if (size) {
-          int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size)); // read up to 128 byte
-
-        #ifdef HEXDUMP
-          if (loopCount == 0) {
-            hexDump(Serial, "[DUMP buffer]", &buff, 128, 16);
-            hexDump(Serial, "[DUMP c]", &c, 128, 16);
-          }
-          loopCount = 1;
-        #endif
-          processUpdate(buff, c);
-
-          if (len > 0) {
-              len -= c;
-          }
-        }
-        delay(1);
-      }
-  } else {
-    Serial.println("[-] Cannot download firmware file. Only HTTP response 200 is supported.");
+  if (hexDump != 0 && this->serial == 0) {
+    this->errorNumber = 4;
+    return this->errorNumber;
   }
-  this->end();
+
+  if (!this->connectWifi()) {
+    return this->errorNumber;
+  }
+
+  if (!this->getRequest(updateUrl)) {
+    return this->errorNumber;
+  }
+
+  int len = totalLength = this->getSize(); // get the value of the content-length header
+
+  if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+    errorNumber = 3;
+    return this->errorNumber;
+  }
+  
+  uint8_t buff[128] = { 0 }; // create buffer for read
+  WiFiClient * stream = this->getStreamPtr(); // get tcp stream
+  
+  int loopCount = 0;
+
+  while (this->connected() && (len > 0 || len == -1)) { // read all data from server
+    size_t size = stream->available(); // get available data size
+    
+    if (size) {
+      int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size)); // read up to 128 bytes into the buffer
+
+      if (loopCount == 0 && hexDump != 0) {
+        this->hexDump(this->serial, "[DUMP buffer]", &buff, 128, 16); // remove serial a member variable anyway
+        this->hexDump(this->serial, "[DUMP c]", &c, 128, 16);
+      }
+
+      loopCount = 1;
+
+      try {
+        processUpdate(buff, c);
+      } catch (int error) {
+        this->errorNumber = error;
+        return this->errorNumber;
+      }
+
+      if (len > 0) {
+          len -= c;
+      }
+    }
+    delay(1);
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Parses the verion number (sematic versioning) from a string read
+ * from the GET request, or from the CURRENT_VERSION decalred in 
+ * version.h. The version is returned as integer for comparison,
+ * e.g. "version=1.2.8" will be returned as 128.
+ * 
+ * @return int version or int error
+ */
+int WiFi_FirmwareUpdater::versionNumberFromString(bool currentVersionCheck) // private
+{
+  std::string version;
+
+  try {
+    if (currentVersionCheck == false) {
+      version = this->getString().c_str();
+      version = version.substr(version.find_first_of("=") + 1);
+      this->availableVersion = version.c_str();
+
+      if (this->availableVersion == "") {
+        throw 5;
+      }
+
+      if (version == "") {
+        throw 6;
+      } 
+    } else {
+      version = this->currentVersion;
+    }
+  } catch (int error) {
+    this->errorNumber = error;
+    return error;
+  }
+
+  std::string output;
+  output.reserve(version.size()); // optional, avoids buffer reallocations in the loop
+
+  for (size_t i = 0; i < version.size(); ++i) {
+    if (version[i] != '.') {
+      output += version[i];
+    }
+  }
+  return std::atoi( output.c_str() );
 }
