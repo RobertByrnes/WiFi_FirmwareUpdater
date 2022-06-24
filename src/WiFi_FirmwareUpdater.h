@@ -9,6 +9,7 @@
 
 using namespace std;
 
+#define NO_CREDENTIALS                      "Not Set"
 #define HEXDUMP                             (1)
 
 #define FIRMWARE_ERROR_OK                   (0)
@@ -32,8 +33,12 @@ typedef struct {
 class WiFi_FirmwareUpdater: public HTTPClient
 {
 public:
-    const char *ssid; // Local network name
-    const char *password; // Local network password
+    const char *ssid_1; // Local network name
+    const char *password_1; // Local network password
+    const char *ssid_2 = NO_CREDENTIALS; // Local network name
+    const char *password_2 = NO_CREDENTIALS; // Local network password
+    const char *ssid_3 = NO_CREDENTIALS; // Local network name
+    const char *password_3 = NO_CREDENTIALS; // Local network password
     const char *httpErrorString;
     const string currentVersion; // Current firmware version
     uint8_t errorNumber = 0; // Error number
@@ -46,11 +51,11 @@ public:
     ~WiFi_FirmwareUpdater();
 
     bool checkUpdateAvailable(const char *versionFileUrl);
-    bool connectWifi();
+    bool connectWifi(int credential = 1);
     String availableFirmwareVersion();
     const char * errorString();
     int error();
-    int updateFirmware(const char *updateUrl, uint8_t hexDump=0);
+    int updateFirmware(const char *updateUrl, uint8_t hexDump = 0);
     IPAddress ipAddress();
 
 private:

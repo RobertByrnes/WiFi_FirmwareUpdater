@@ -3,15 +3,23 @@
 
 // Constructors
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion):
-  ssid(credentials.ssid_1), 
-  password(credentials.pass_1), 
+  ssid_1(credentials.ssid_1), 
+  password_1(credentials.pass_1),
+  ssid_2(credentials.ssid_2), 
+  password_2(credentials.pass_2), 
+  ssid_3(credentials.ssid_3), 
+  password_3(credentials.pass_3),  
   totalLength(0), 
   currentLength(0),
   currentVersion(currentVersion) {}
 
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion, HardwareSerial Serial):
-  ssid(credentials.ssid_1), 
-  password(credentials.pass_1), 
+  ssid_1(credentials.ssid_1), 
+  password_1(credentials.pass_1),
+  ssid_2(credentials.ssid_2), 
+  password_2(credentials.pass_2), 
+  ssid_3(credentials.ssid_3), 
+  password_3(credentials.pass_3),  
   totalLength(0), 
   currentLength(0),
   currentVersion(currentVersion)
@@ -20,16 +28,16 @@ WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const c
 }
 
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion):
-  ssid(ssid), 
-  password(password), 
+  ssid_1(ssid), 
+  password_1(password), 
   totalLength(0), 
   currentLength(0),
   currentVersion(currentVersion) {}
 
 
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion, HardwareSerial Serial):
-  ssid(ssid), 
-  password(password), 
+  ssid_1(ssid), 
+  password_1(password), 
   totalLength(0), 
   currentLength(0),
   currentVersion(currentVersion)
@@ -61,7 +69,7 @@ String WiFi_FirmwareUpdater::availableFirmwareVersion() // public
  */
 bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl) // public
 {
-  if (!this->connectWifi() || !this->getRequest(verisonFileUrl)) {
+  if (!this->connectWifi(1) || !this->getRequest(verisonFileUrl)) {
     return false;
   }
 
@@ -96,24 +104,44 @@ bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl) // p
  * 
  * @return bool
  */
-bool WiFi_FirmwareUpdater::connectWifi() // private
+bool WiFi_FirmwareUpdater::connectWifi(int credential) // private
 {
   if (WiFi.mode(WIFI_MODE_STA)) {
     this->errorNumber = 0;
   } 
 
-  int status = WiFi.begin(ssid, password);
+  int status = WL_CONNECTED;
+
+  if (credential == 1) {
+    status = WiFi.begin(this->ssid_1, this->password_1);
+  } else if (credential == 2) {
+    status = WiFi.begin(this->ssid_2, this->password_2);
+  } else if (credential == 3) {
+    status = WiFi.begin(this->ssid_3, this->password_3);
+  }
+
+  int maxWait = 20;
 
   while (status != WL_CONNECTED) {
+    maxWait -= 1;
+    if (maxWait == 0) {
+      break;
+    }
     status = WiFi.status();
     delay(500);
   }
 
   if (!WiFi.isConnected()) {
-    this->errorNumber = 1;
-    return false;
+    if (credential == 1 && this->ssid_2 != NO_CREDENTIALS && this->password_2 != NO_CREDENTIALS) {
+      this->connectWifi(2);
+    } else if (credential == 2 && this->ssid_3 != NO_CREDENTIALS && this->password_3 != NO_CREDENTIALS) {
+      this->connectWifi(3);
+    } else {
+      this->errorNumber = 1;
+      return false;
+    }
   }
-
+  
   return true;
 }
 
@@ -287,7 +315,7 @@ int WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl, uint8_t hexDump)
     return this->errorNumber;
   }
 
-  if (!this->connectWifi()) {
+  if (!this->connectWifi(1)) {
     return this->errorNumber;
   }
 
