@@ -1,4 +1,5 @@
 .vscode/
 .pio/
-include/
+include/config.h
+include/*.config.h
 src/main.cpp
