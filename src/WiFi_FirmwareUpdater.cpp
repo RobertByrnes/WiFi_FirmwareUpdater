@@ -2,20 +2,37 @@
 #include "hexdump.cpp"
 
 // Constructors
+WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion):
+  ssid(credentials.ssid_1), 
+  password(credentials.pass_1), 
+  totalLength(0), 
+  currentLength(0),
+  currentVersion(currentVersion) {}
+
+WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion, HardwareSerial Serial):
+  ssid(credentials.ssid_1), 
+  password(credentials.pass_1), 
+  totalLength(0), 
+  currentLength(0),
+  currentVersion(currentVersion)
+{
+  this->serial = Serial;
+}
+
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion):
-   ssid(ssid), 
-   password(password), 
-   totalLength(0), 
-   currentLength(0),
-   currentVersion(currentVersion) {}
+  ssid(ssid), 
+  password(password), 
+  totalLength(0), 
+  currentLength(0),
+  currentVersion(currentVersion) {}
 
 
 WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion, HardwareSerial Serial):
-   ssid(ssid), 
-   password(password), 
-   totalLength(0), 
-   currentLength(0),
-   currentVersion(currentVersion)
+  ssid(ssid), 
+  password(password), 
+  totalLength(0), 
+  currentLength(0),
+  currentVersion(currentVersion)
 {
   this->serial = Serial;
 }
@@ -26,9 +43,9 @@ WiFi_FirmwareUpdater::~WiFi_FirmwareUpdater() {}
 /**
  * @brief Get the firmware version available on the update server.
  * 
- * @return const char *
+ * @return String
  */
-const char * WiFi_FirmwareUpdater::availableFirmwareVersion() // public
+String WiFi_FirmwareUpdater::availableFirmwareVersion() // public
 {
   return this->availableVersion;
 }

@@ -20,6 +20,14 @@ using namespace std;
 #define FIRMWARE_ERROR_NO_UPDATE_VERSION    (6)
 #define FIRMWARE_ERROR_UPDATE_END           (7)
 
+typedef struct {
+    const char *ssid_1;
+    const char *pass_1;
+    const char *ssid_2;
+    const char *pass_2;
+    const char *ssid_3;
+    const char *pass_3;
+} WiFi_Credentials;
 
 class WiFi_FirmwareUpdater: public HTTPClient
 {
@@ -31,13 +39,15 @@ public:
     uint8_t errorNumber = 0; // Error number
     HardwareSerial serial = 0;
 
+    WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion);
+    WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion, HardwareSerial Serial);
     WiFi_FirmwareUpdater(const char *ssid, const char *password, const char *currentVersion);
     WiFi_FirmwareUpdater(const char *ssid, const char *password, const char *currentVersion, HardwareSerial Serial);
     ~WiFi_FirmwareUpdater();
 
     bool checkUpdateAvailable(const char *versionFileUrl);
     bool connectWifi();
-    const char * availableFirmwareVersion();
+    String availableFirmwareVersion();
     const char * errorString();
     int error();
     int updateFirmware(const char *updateUrl, uint8_t hexDump=0);
@@ -47,7 +57,7 @@ private:
     int totalLength; // Total size of firmware
     int currentLength; // Current size of the written firmware
     int respCode; // HTTP response from GET requests
-    const char* availableVersion; // Firmware version available on the remote server
+    String availableVersion; // Firmware version available on the remote server
 
     bool getRequest(const char *url);
     void hexDump(HardwareSerial &Serial, const char * desc, const void * addr, const int len, int perLine);
