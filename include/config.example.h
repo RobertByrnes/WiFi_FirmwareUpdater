@@ -24,17 +24,17 @@ const char *CURRENT_VERSION = "0.0.1";
 
 // location of firmware file on external web server
 // change to your actual .bin location
-const char *UPDATE_HOST = "draperbiotech.clystnet.com";
-const char *UPDATE_URL = "https://draperbiotech.clystnet.com/firmware.bin"; // must include either http:// or https://
-const char *UPDATE_VERSION_FILE_URL = "https://draperbiotech.clystnet.com/firmware.txt";
+const char *UPDATE_HOST = "exaample.server.com";
+const char *UPDATE_URL = "https://exaample.server.com/firmware.bin"; // must include either http:// or https://
+const char *UPDATE_VERSION_FILE_URL = "https://exaample.server.com/firmware.txt";
 
 // WiFi credentials
-const char *SSID_1 = "Clystnet Guest"; // WiFi Network Name
-const char *PASSWORD_1 = "18dart200"; // WiFi Network Password
-const char *SSID_2 = "Clystnet Guest"; // WiFi Network Name
-const char *PASSWORD_2 = "18dart200"; // WiFi Network Password
-const char *SSID_3 = "Clystnet Guest"; // WiFi Network Name
-const char *PASSWORD_3 = "18dart200"; // WiFi Network Password
+const char *SSID_1 = "ssid"; // WiFi Network Name
+const char *PASSWORD_1 = "password"; // WiFi Network Password
+const char *SSID_2 = "ssid"; // WiFi Network Name
+const char *PASSWORD_2 = "password"; // WiFi Network Password
+const char *SSID_3 = "ssid"; // WiFi Network Name
+const char *PASSWORD_3 = "password"; // WiFi Network Password
 
 // Counter
 unsigned long PREVIOUS_MILLIS = 0;
