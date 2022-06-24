@@ -29,7 +29,14 @@ const char *UPDATE_URL = "https://draperbiotech.clystnet.com/firmware.bin"; // m
 const char *UPDATE_VERSION_FILE_URL = "https://draperbiotech.clystnet.com/firmware.txt";
 
 // WiFi credentials
-const char *SSID = "CrowdedHouse"; // WiFi Network Name
-const char *PASSWORD = "kF4QMhzc3xcS"; // WiFi Network Password
+const char *SSID_1 = "Clystnet Guest"; // WiFi Network Name
+const char *PASSWORD_1 = "18dart200"; // WiFi Network Password
+const char *SSID_2 = "Clystnet Guest"; // WiFi Network Name
+const char *PASSWORD_2 = "18dart200"; // WiFi Network Password
+const char *SSID_3 = "Clystnet Guest"; // WiFi Network Name
+const char *PASSWORD_3 = "18dart200"; // WiFi Network Password
+
+// Counter
+unsigned long PREVIOUS_MILLIS = 0;
 
 #endif
