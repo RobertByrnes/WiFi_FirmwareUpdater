@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define NO_CREDENTIALS                      "Not Set"
+#define NO_CREDENTIALS                      ""
 #define HEXDUMP                             (1)
 
 #define FIRMWARE_ERROR_OK                   (0)

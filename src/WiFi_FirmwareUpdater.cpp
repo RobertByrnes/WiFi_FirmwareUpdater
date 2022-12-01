@@ -64,7 +64,6 @@ String WiFi_FirmwareUpdater::availableFirmwareVersion() // public
  * function will return true, else it will be false.
  * 
  * @param versionFileUrl const char *
- * 
  * @return bool
  */
 bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl) // public
@@ -102,6 +101,7 @@ bool WiFi_FirmwareUpdater::checkUpdateAvailable(const char *verisonFileUrl) // p
  * @brief Start WiFi connection, allows 20 seconds to make a connection, before
  * setting a failed to connect errorNumber.
  * 
+ * @param credential int
  * @return bool
  */
 bool WiFi_FirmwareUpdater::connectWifi(int credential) // private
@@ -158,8 +158,6 @@ int WiFi_FirmwareUpdater::error()
 /**
  * @brief get the errorNumber message from the errorNumber number.
  * 
- * @param errorNumber uint8_t
- * 
  * @return const char *
  */
 const char * WiFi_FirmwareUpdater::errorString() // public
@@ -185,6 +183,7 @@ const char * WiFi_FirmwareUpdater::errorString() // public
 /**
  * @brief Connect to update server with a GET request.
  * 
+ * @param url const char *
  * @return bool
  */
 bool WiFi_FirmwareUpdater::getRequest(const char *url) // private
@@ -198,65 +197,6 @@ bool WiFi_FirmwareUpdater::getRequest(const char *url) // private
   }
 
   return true;
-}
-
-// Usage:
-//     hexDump(desc, addr, len, perLine);
-//         desc:    if non-NULL, printed as a description before hex dump.
-//         addr:    the address to start dumping from.
-//         len:     the number of bytes to dump.
-//         perLine: number of bytes on each output line.
-
-void WiFi_FirmwareUpdater::hexDump(HardwareSerial &Serial, const char * desc, const void * addr, const int len, int perLine)
-{
-    int i;
-    unsigned char buff[perLine+1];
-    const unsigned char * pc = (const unsigned char *)addr;
-
-    if (desc != "") {
-      Serial.printf("%s:\n", desc);
-    }
-    
-    if (len == 0) {
-        Serial.print("  ZERO LENGTH\n");
-        return;
-    }
-
-    if (len < 0) {
-        Serial.printf("  NEGATIVE LENGTH: %d\n", len);
-        return;
-    }
-
-    // Process every byte in the data.
-    for (i = 0; i < len; i++) {
-        if ((i % perLine) == 0) {
-            // Only print previous-line ASCII buffer for lines beyond first.
-            if (i != 0) {
-              Serial.printf("  %s\n", buff);
-            }
-            // Output the offset of current line.
-            Serial.printf("  %04x ", i);
-        }
-
-        // Now the hex code for the specific character.
-        Serial.printf(" %02x", pc[i]);
-
-        // And buffer a printable ASCII character for later.
-        if ((pc[i] < 0x20) || (pc[i] > 0x7e)) // isprint() may be better.
-            buff[i % perLine] = '.';
-        else
-            buff[i % perLine] = pc[i];
-        buff[(i % perLine) + 1] = '\0';
-    }
-
-    // Pad out last line if not exactly perLine characters.
-    while ((i % perLine) != 0) {
-        Serial.printf("   ");
-        i++;
-    }
-
-    // And print the final ASCII buffer.
-    Serial.printf("  %s\n", buff);
 }
 
 /**
@@ -305,7 +245,7 @@ void WiFi_FirmwareUpdater::processUpdate(uint8_t *data, size_t len) // private
  * WiFi_FirmwareUpdater::errorString to retrieve the errorNumber message.
  * 
  * @param updateUrl const char * 
- * 
+ * @param hexDump uint8_t
  * @return void
  */
 int WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl, uint8_t hexDump)
@@ -371,6 +311,7 @@ int WiFi_FirmwareUpdater::updateFirmware(const char *updateUrl, uint8_t hexDump)
  * version.h. The version is returned as integer for comparison,
  * e.g. "version=1.2.8" will be returned as 128.
  * 
+ * @param currentVersionCheck bool
  * @return int version or int error
  */
 int WiFi_FirmwareUpdater::versionNumberFromString(bool currentVersionCheck) // private
