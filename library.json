@@ -20,5 +20,11 @@
     "frameworks": "*",
     "platforms": "espressif32, arduino",
     "headers": ["WiFi_FirmwareUpdater.h"],
-    "examples": ["examples/*/*.ino", "examples/*/*.cpp"]
+    "examples": "examples/*/*",
+    "dependencies":
+    {
+        "bblanchon/ArduinoJson": "^6.19.4",
+        "arduino-libraries/ArduinoHttpClient": "^0.4.0",
+        "WiFi": "^2.0.0"
+    }
   }
