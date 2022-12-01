@@ -2,48 +2,7 @@
 #include "hexdump.cpp"
 
 // Constructors
-WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion):
-  ssid_1(credentials.ssid_1), 
-  password_1(credentials.pass_1),
-  ssid_2(credentials.ssid_2), 
-  password_2(credentials.pass_2), 
-  ssid_3(credentials.ssid_3), 
-  password_3(credentials.pass_3),  
-  totalLength(0), 
-  currentLength(0),
-  currentVersion(currentVersion) {}
-
-WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion, HardwareSerial Serial):
-  ssid_1(credentials.ssid_1), 
-  password_1(credentials.pass_1),
-  ssid_2(credentials.ssid_2), 
-  password_2(credentials.pass_2), 
-  ssid_3(credentials.ssid_3), 
-  password_3(credentials.pass_3),  
-  totalLength(0), 
-  currentLength(0),
-  currentVersion(currentVersion)
-{
-  this->serial = Serial;
-}
-
-WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion):
-  ssid_1(ssid), 
-  password_1(password), 
-  totalLength(0), 
-  currentLength(0),
-  currentVersion(currentVersion) {}
-
-
-WiFi_FirmwareUpdater::WiFi_FirmwareUpdater(const char* ssid, const char* password, const char *currentVersion, HardwareSerial Serial):
-  ssid_1(ssid), 
-  password_1(password), 
-  totalLength(0), 
-  currentLength(0),
-  currentVersion(currentVersion)
-{
-  this->serial = Serial;
-}
+WiFi_FirmwareUpdater::WiFi_FirmwareUpdater() {}
 
 // Destructor
 WiFi_FirmwareUpdater::~WiFi_FirmwareUpdater() {}

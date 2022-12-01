@@ -1,7 +1,7 @@
 {
     "name": "WiFi_FirmwareUpdater",
-    "version": "1.0.4",
-    "description": "Developer friendly package for performing firmware updates",
+    "version": "1.0.6",
+    "description": "A Developer friendly package for performing firmware updates",
     "keywords": "updates, firmware, http, https, esp32, esp32-s2, esp32-c3, esp32-s3",
     "repository":
     {
@@ -25,6 +25,7 @@
     {
         "bblanchon/ArduinoJson": "^6.19.4",
         "arduino-libraries/ArduinoHttpClient": "^0.4.0",
-        "WiFi": "^2.0.0"
+        "WiFi": "^2.0.0",
+        "Update": "2.0.0"
     }
   }

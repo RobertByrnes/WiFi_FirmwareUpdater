@@ -9,7 +9,6 @@
 
 using namespace std;
 
-#define NO_CREDENTIALS                      ""
 #define HEXDUMP                             (1)
 
 #define FIRMWARE_ERROR_OK                   (0)
@@ -30,26 +29,25 @@ typedef struct {
     const char *pass_3;
 } WiFi_Credentials;
 
-class WiFi_FirmwareUpdater: public HTTPClient
+class WiFi_FirmwareUpdater
 {
 public:
-    const char *ssid_1; // Local network name
-    const char *password_1; // Local network password
-    const char *ssid_2 = NO_CREDENTIALS; // Local network name
-    const char *password_2 = NO_CREDENTIALS; // Local network password
-    const char *ssid_3 = NO_CREDENTIALS; // Local network name
-    const char *password_3 = NO_CREDENTIALS; // Local network password
+    std::string ssid_1 = ""; // Local network name
+    std::string password_1 = ""; // Local network password
+    std::string ssid_2 = ""; // Local network name
+    std::string password_2 = ""; // Local network password
+    std::string ssid_3 = ""; // Local network name
+    std::string password_3 = ""; // Local network password
     const char *httpErrorString;
     const string currentVersion; // Current firmware version
     uint8_t errorNumber = 0; // Error number
     HardwareSerial serial = 0;
 
-    WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion);
-    WiFi_FirmwareUpdater(WiFi_Credentials credentials, const char *currentVersion, HardwareSerial Serial);
-    WiFi_FirmwareUpdater(const char *ssid, const char *password, const char *currentVersion);
-    WiFi_FirmwareUpdater(const char *ssid, const char *password, const char *currentVersion, HardwareSerial Serial);
+    WiFi_FirmwareUpdater();
     ~WiFi_FirmwareUpdater();
 
+    template <WiFi_Credentials &credentials, typename ClientType>
+    void setConfig(WiFi_Credentials &credentials, ClientType &client);
     bool checkUpdateAvailable(const char *versionFileUrl);
     bool connectWifi(int credential = 1);
     String availableFirmwareVersion();
