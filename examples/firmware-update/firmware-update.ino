@@ -1,3 +1,16 @@
+/**
+ * @digitaldragon/WiFi_FirmwareUpdater
+ * 
+ * @example A Basic example code for esp32 chipset. Check against a firmware
+ * version file for a new firmware version.  If one exists the binary
+ * will be downloaded and streamed into an update buffer.
+ * 
+ * The library provide a high level API so this
+ * process is handled in 2 function calls.
+ * 
+*/
+
+#include <HTTPClient.h>
 #include <WiFi_FirmwareUpdater.h>
 
 #define BAUD_RATE 115200
@@ -11,12 +24,14 @@ unsigned long previousMillis = 0;
 
 const char *updateBinaryUrl = "https://example.server.com/firmware.bin"; // must include either http:// or https://
 const char *versionFileUrl = "https://example.server.com/firmware.txt";
-// Updates
-WiFi_FirmwareUpdater update(ssid, wifiPassword, firmwareVersion);
+
+WiFi_FirmwareUpdater update;
+HTTPClient client;
 
 
 void setup()
 {
+  update.configure(ssid, wifiPassword, firmwareVersion);
   Serial.begin(BAUD_RATE);
 }
 
@@ -25,8 +40,8 @@ void loop()
   if (millis() - previousMillis >= connectionInterval) {
     previousMillis = millis();
 
-    if (update.checkUpdateAvailable(versionFileUrl)) {
-      update.updateFirmware(updateBinaryUrl);
+    if (update.checkUpdateAvailable(client, versionFileUrl)) {
+      update.updateFirmware(client, updateBinaryUrl);
     }
   }
 }

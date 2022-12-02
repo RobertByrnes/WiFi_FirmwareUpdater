@@ -1,4 +1,20 @@
+/**
+ * @digitaldragon/WiFi_FirmwareUpdater
+ * 
+ * @example An example code for esp32 chipset. Check against a firmware
+ * version file for a new firmware version.  If one exists the binary
+ * will be downloaded and streamed into an update buffer.
+ * 
+ * This example supports up to 3 sets of WiFi credentials, an error
+ * message can be extracted from the WiFi_FirmwareUpdater if an
+ * error occurs in process an update.
+ * 
+ * The library provide a high level API so this
+ * process is handled in 2 function calls.
+ * 
+*/
 #include <Arduino.h>
+#include <HTTPClient.h>
 #include <WiFi_FirmwareUpdater.h>
 
 #define BAUD_RATE 115200
@@ -18,8 +34,7 @@ unsigned long previousMillis = 0;
 const char *updateBinaryUrl = "https://example.server.com/firmware.bin"; // must include either http:// or https://
 const char *versionFileUrl = "https://example.server.com/firmware.txt";
 
-// Updates
-WiFi_Credentials credentials {
+WiFi_Credentials keys {
   ssid1,
   wifiPassword2,
   ssid2,
@@ -28,25 +43,28 @@ WiFi_Credentials credentials {
   wifiPassword3
 };
 
-WiFi_FirmwareUpdater update(credentials, firmwareVersion);
+WiFi_FirmwareUpdater update;
+HTTPClient client;
 
 void setup()
 {
   Serial.begin(BAUD_RATE);
   delay(1000);
   Serial.printf("[Current Firmware Version] %s\n", firmwareVersion);
+
+  update.configure(keys, firmwareVersion);
 }
 
 void loop()
 {
-  if (update.checkUpdateAvailable(versionFileUrl)) {
+  if (update.checkUpdateAvailable(client, versionFileUrl)) {
     Serial.print("[Connected at IP Address] ");
     Serial.println(update.ipAddress());
     delay(3);
     Serial.print("[Firmware version available] ");
     Serial.println(update.availableFirmwareVersion());
 
-    update.updateFirmware(updateBinaryUrl);
+    update.updateFirmware(client, updateBinaryUrl);
   } else {
     Serial.println(update.errorString());
   }
