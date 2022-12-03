@@ -36,7 +36,7 @@ const char *versionFileUrl = "https://example.server.com/firmware.txt";
 
 WiFi_Credentials keys {
   ssid1,
-  wifiPassword2,
+  wifiPassword1,
   ssid2,
   wifiPassword2,
   ssid3,
