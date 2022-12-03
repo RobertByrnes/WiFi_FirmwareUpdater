@@ -20,7 +20,7 @@
 #define BAUD_RATE 115200
 
 const char *ssid1 = "Home WiFi";
-const char *wifiPassword2 = "k54feSIWS93923092kzx";
+const char *wifiPassword1 = "k54feSIWS93923092kzx";
 const char *ssid2 = "Garage WiFi";
 const char *wifiPassword2 = "8dhfgdgY23fsfJHfjhif";
 const char *ssid3 = "";
