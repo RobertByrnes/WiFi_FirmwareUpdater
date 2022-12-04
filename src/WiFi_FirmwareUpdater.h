@@ -8,6 +8,7 @@
 #include <Update.h>
 #include "string.h"
 #include <HardwareSerial.h>
+#include <semver.hpp>
 
 using namespace std;
 
@@ -74,10 +75,11 @@ public:
 
         if (_respCode == 200) {
             int len = _totalLength = client.getSize(); // get length of doc (is -1 when Server sends no Content-Length header)
-            int currentVersion = this->versionNumberFromString(client, true);
-            int availableVersion = this->versionNumberFromString(client, false);
+            std::string currentVersion = this->versionNumberFromString(client, true);
+            std::string availableVersion = this->versionNumberFromString(client, false);
+            int check = Semver::versionCompare(currentVersion, availableVersion);
 
-            if (availableVersion > currentVersion) {
+            if (check=-1) {
                 return true;
             } else {
                 return false;
@@ -226,16 +228,16 @@ private:
     }
 
     /**
-     * @brief Parses the verion number (sematic versioning) from a string read
-     * from the GET request, or from the CURRENT_VERSION decalred in 
-     * version.h. The version is returned as integer for comparison,
+     * @brief Parses the version number (semantic versioning) from a string read
+     * from the GET request, or from the CURRENT_VERSION declared in 
+     * version.h. Version is returned as an integer for comparison,
      * e.g. "version=1.2.8" will be returned as 128.
      * 
      * @param currentVersionCheck bool
      * @return int version or int error
      */
     template <typename ClientType>
-    int versionNumberFromString(ClientType &client, bool currentVersionCheck)
+    std::string versionNumberFromString(ClientType &client, bool currentVersionCheck)
     {
         std::string version;
 
@@ -257,18 +259,19 @@ private:
             }
         } catch (int error) {
             _errorNumber = error;
-            return error;
+            // return error;
         }
 
-        std::string output;
-        output.reserve(version.size()); // optional, avoids buffer reallocations in the loop
+        return version;
+        // std::string output;
+        // output.reserve(version.size()); // optional, avoids buffer reallocations in the loop
 
-        for (size_t i = 0; i < version.size(); ++i) {
-            if (version[i] != '.') {
-                output += version[i];
-            }
-        }
-        return std::atoi( output.c_str() );
+        // for (size_t i = 0; i < version.size(); ++i) {
+        //     if (version[i] != '.') {
+        //         output += version[i];
+        //     }
+        // }
+        // return std::atoi( output.c_str() );
     }
 
 };

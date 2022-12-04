@@ -39,3 +39,6 @@ jobs:
 
     - name: Build Examples
       run: pio ci -e esp-wrover-kit examples/ --project-conf=platformio.ini --exclude=src/main.cpp --lib=src --keep-build-dir
+
+    - name: Run SemVer Tests
+      run: pio test -e semver-tests --without-uploading
