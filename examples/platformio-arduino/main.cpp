@@ -62,7 +62,7 @@ void loop()
     Serial.println(update.ipAddress());
     delay(3);
     Serial.print("[Firmware version available] ");
-    Serial.println(update.availableFirmwareVersion());
+    Serial.println(update.availableFirmwareVersion().c_str());
 
     update.updateFirmware(client, updateBinaryUrl);
   } else {

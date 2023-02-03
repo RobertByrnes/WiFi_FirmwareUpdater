@@ -77,7 +77,7 @@ bool WiFi_FirmwareUpdater::connectWifi(int credential) // private
  * 
  * @return String
  */
-String WiFi_FirmwareUpdater::availableFirmwareVersion() // public
+std::string WiFi_FirmwareUpdater::availableFirmwareVersion() // public
 {
   return _availableVersion;
 }

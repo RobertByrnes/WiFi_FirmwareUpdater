@@ -53,7 +53,7 @@ public:
     void configure(const char * ssid, const char * password, const char * firmwareVersion);
 
     bool connectWifi(int credential = 1);
-    String availableFirmwareVersion();
+    std::string availableFirmwareVersion();
     const char * errorString();
     int error();
     IPAddress ipAddress();
@@ -175,7 +175,7 @@ private:
     int _totalLength; // Total size of firmware
     int _currentLength; // Current size of the written firmware
     int _respCode; // HTTP response from GET requests
-    String _availableVersion; // Firmware version available on the remote server
+    std::string _availableVersion; // Firmware version available on the remote server
     
     void hexDump(HardwareSerial &Serial, const char * desc, const void * addr, const int len, int perLine);
 
@@ -245,7 +245,7 @@ private:
             if (currentVersionCheck == false) {
                 version = client.getString().c_str();
                 version = version.substr(version.find_first_of("=") + 1);
-                _availableVersion = version.c_str();
+                _availableVersion = version;
 
                 if (_availableVersion == "") {
                     throw 5;
@@ -259,21 +259,10 @@ private:
             }
         } catch (int error) {
             _errorNumber = error;
-            // return error;
         }
 
         return version;
-        // std::string output;
-        // output.reserve(version.size()); // optional, avoids buffer reallocations in the loop
-
-        // for (size_t i = 0; i < version.size(); ++i) {
-        //     if (version[i] != '.') {
-        //         output += version[i];
-        //     }
-        // }
-        // return std::atoi( output.c_str() );
     }
-
 };
 
 #endif
